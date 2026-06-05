@@ -1,82 +1,80 @@
-import { defineStore } from "pinia";
 import { ref } from "vue";
+import { defineStore } from "pinia";
 import axios from "axios";
 
 export const useMovieStore = defineStore("movie", () => {
-  // [1] State (상태 관리 구역)
   const movies = ref([]);
-  // 세션 스토리지에서 기존 찜 목록이 있으면 가져오고, 없으면 빈 배열로 초기화합니다.
-  const favorites = ref(JSON.parse(sessionStorage.getItem("favorites")) || []);
-
-  // [2] UX 및 예외 처리를 위한 방어 상태 변수
+  const favorites = ref([]);
   const isLoading = ref(false);
   const errorMessage = ref("");
 
-  // [3] Actions: 외부 서버 통신 함수 (async/await 적용)
+  // 단일 영화 상세 정보 저장을 위한 전역 상태 변수
+  const selectedMovie = ref(null);
+
+  // 영화 목록 가져오기 함수
   const fetchMovies = async () => {
+    // 🌟 [추가됨] 데이터 캐싱: 이미 영화 목록이 있으면 함수 즉시 종료 (새로고침 방지)
+    if (movies.value.length > 0) return;
+
     isLoading.value = true;
     errorMessage.value = "";
-
     try {
+      // 본인의 API KEY 적용 완료!
       const API_KEY = "a08ae330a52d36e9efd4ce83f57a9d38";
-
-      const movieParams = {
-        api_key: API_KEY,
-        language: "ko-KR",
-        region: "KR",
-        sort_by: "popularity.desc",
-        include_adult: false,
-        "release_date.gte": "2025-01-01",
-        with_release_type: "2|3",
-        page: 1,
-      };
-
-      // Axios를 통해 TMDB discover API 주소로 요청 전달
       const response = await axios.get(
-        "https://api.themoviedb.org/3/discover/movie",
+        "https://api.themoviedb.org/3/movie/popular",
         {
-          params: movieParams,
+          params: { api_key: API_KEY, language: "ko-KR" },
         },
       );
-
-      const fetchedMovies = response.data.results; // 20개의 영화 배열 추출
-
-      fetchedMovies.forEach((movie) => {
-        const isAlreadyFavorite = favorites.value.some(
-          (fav) => fav.id === movie.id,
-        );
-        movie.isFavorite = isAlreadyFavorite;
-      });
-
-      movies.value = fetchedMovies;
+      movies.value = response.data.results;
     } catch (error) {
-      console.error("API 통신 에러 상세 내역:", error);
-      errorMessage.value =
-        "영화 데이터를 불러오는 데 실패했습니다. 통신 상태나 API Key를 확인해 주세요.";
+      errorMessage.value = "영화 목록을 불러오는데 실패했습니다.";
     } finally {
       isLoading.value = false;
     }
   };
 
-  // [4] Actions: 찜하기 토글 및 세션 스토리지 반영 로직
-  const toggleFavorite = (movieId) => {
-    const movie = movies.value.find((m) => m.id === movieId);
-    if (movie) {
-      movie.isFavorite = !movie.isFavorite;
-
-      if (movie.isFavorite) {
-        // 하트 활성화 시 전역 찜 목록 배열에 추가
-        favorites.value.push(movie);
-      } else {
-        // 하트 해제 시 찜 목록에서 제외
-        favorites.value = favorites.value.filter((m) => m.id !== movieId);
-      }
-      // 브라우저 세션 스토리지 금고에 실시간 저장
-      sessionStorage.setItem("favorites", JSON.stringify(favorites.value));
+  // 즐겨찾기 토글 함수
+  const toggleFavorite = (movie) => {
+    const index = favorites.value.findIndex((m) => m.id === movie.id);
+    if (index === -1) {
+      favorites.value.push(movie);
+    } else {
+      favorites.value.splice(index, 1);
     }
   };
 
-  // 컴포넌트들이 사용할 수 있도록 상태와 함수들을 반환합니다.
+  // 단일 영화 상세 정보 API 호출 함수
+  const fetchMovieDetail = async (movieId) => {
+    isLoading.value = true;
+    errorMessage.value = "";
+    selectedMovie.value = null;
+
+    try {
+      // 본인의 API KEY 적용 완료!
+      const API_KEY = "a08ae330a52d36e9efd4ce83f57a9d38";
+      const url = `https://api.themoviedb.org/3/movie/${movieId}`;
+
+      const response = await axios.get(url, {
+        params: {
+          api_key: API_KEY,
+          language: "ko-KR",
+        },
+      });
+
+      selectedMovie.value = response.data;
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        errorMessage.value = "존재하지 않거나 삭제된 영화 정보입니다.";
+      } else {
+        errorMessage.value = "서버 통신 중 에러가 발생했습니다.";
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   return {
     movies,
     favorites,
@@ -84,5 +82,7 @@ export const useMovieStore = defineStore("movie", () => {
     errorMessage,
     fetchMovies,
     toggleFavorite,
+    selectedMovie,
+    fetchMovieDetail,
   };
 });

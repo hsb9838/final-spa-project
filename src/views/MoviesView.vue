@@ -1,184 +1,99 @@
+<template>
+  <div class="movies-container">
+    <h2>🎬 현재 상영작 목록</h2>
+
+    <div v-if="store.isLoading" class="loading">
+      데이터를 불러오는 중입니다...
+    </div>
+    <div v-else-if="store.errorMessage" class="error">
+      {{ store.errorMessage }}
+    </div>
+
+    <div v-else class="movie-list">
+      <RouterLink
+        v-for="movie in store.movies"
+        :key="movie.id"
+        :to="`/movies/${movie.id}`"
+        class="movie-card"
+      >
+        <img
+          :src="`https://image.tmdb.org/t/p/w500${movie.poster_path}`"
+          alt="poster"
+        />
+        <div class="card-content">
+          <h3>{{ movie.title }}</h3>
+          <p class="overview">
+            {{
+              movie.overview
+                ? movie.overview.substring(0, 80) + "..."
+                : "줄거리 요약 정보가 없습니다."
+            }}
+          </p>
+        </div>
+      </RouterLink>
+    </div>
+  </div>
+</template>
+
 <script setup>
 import { onMounted } from "vue";
 import { useMovieStore } from "../stores/movieStore";
 
 const store = useMovieStore();
 
-// 화면이 브라우저에 장착(Mount)되는 순간 실시간 데이터를 즉시 호출합니다.
 onMounted(() => {
   store.fetchMovies();
+  document.title = "🎬 실시간 국내 극장 박스오피스";
 });
 </script>
 
-<template>
-  <main class="page">
-    <div class="header-section">
-      <h1>국내 극장 화제작 (인기순)</h1>
-      <p class="sub-title">2025년 이후 국내 정식 개봉한 실시간 인기 상영작</p>
-    </div>
-
-    <div v-if="store.isLoading" class="status-message loading">
-      실시간 국내 개봉작 데이터를 싣고 오는 중입니다...
-    </div>
-
-    <div v-else-if="store.errorMessage" class="status-message error">
-      {{ store.errorMessage }}
-    </div>
-
-    <div v-else class="movie-list">
-      <div v-for="movie in store.movies" :key="movie.id" class="movie-card">
-        <img
-          v-if="movie.poster_path"
-          :src="`https://image.tmdb.org/t/p/w500${movie.poster_path}`"
-          :alt="movie.title"
-          class="poster"
-        />
-        <div v-else class="poster-placeholder">이미지 준비 중</div>
-
-        <div class="card-content">
-          <h3 class="title">
-            {{ movie.title }}
-            <span v-if="movie.release_date" class="year"
-              >({{ movie.release_date.substring(0, 4) }})</span
-            >
-          </h3>
-          <p class="rating">⭐ {{ movie.vote_average.toFixed(1) }} / 10</p>
-
-          <p class="overview">
-            {{
-              movie.overview
-                ? movie.overview.substring(0, 60) + "..."
-                : "국내에 등록된 줄거리 요약 정보가 없습니다."
-            }}
-          </p>
-
-          <button
-            @click="store.toggleFavorite(movie.id)"
-            :class="{ active: movie.isFavorite }"
-            class="fav-btn"
-          >
-            {{ movie.isFavorite ? "❤️ 찜 해제" : "🤍 찜하기" }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </main>
-</template>
-
 <style scoped>
-.page {
-  padding: 40px;
-  font-family: sans-serif;
-  background-color: #f8f9fa;
-  min-height: 100vh;
+.movies-container {
+  padding: 20px;
 }
-.header-section {
-  text-align: center;
-  margin-bottom: 40px;
-  color: #2c3e50;
-}
-.sub-title {
-  font-size: 14px;
-  color: #7f8c8d;
-  margin-top: 5px;
-}
-.status-message {
-  text-align: center;
-  font-size: 20px;
-  font-weight: bold;
-  padding: 5px;
-  border-radius: 12px;
-}
-.loading {
-  color: #3498db;
-  background-color: #e3f2fd;
-}
-.error {
-  color: #e74c3c;
-  background-color: #fdeaee;
-}
-
 .movie-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
 }
 .movie-card {
-  background: white;
-  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid #ddd;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease;
   display: flex;
   flex-direction: column;
+  transition: transform 0.2s;
+  background: #fff;
 }
 .movie-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
-.poster {
+.movie-card img {
   width: 100%;
-  height: 380px;
+  height: 300px;
   object-fit: cover;
 }
-.poster-placeholder {
-  width: 100%;
-  height: 380px;
-  background-color: #ddd;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #7f8c8d;
-  font-weight: bold;
-}
 .card-content {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
+  padding: 15px;
 }
-.title {
-  font-size: 18px;
-  color: #333;
-  margin: 0 0 6px 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-weight: bold;
-}
-.release-date {
-  font-size: 13px;
-  color: #7f8c8d;
-  margin-bottom: 10px;
-  font-weight: 500;
-}
-.rating {
-  font-weight: bold;
-  color: #f39c12;
-  margin-bottom: 10px;
-  font-size: 16px;
+.card-content h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.1rem;
 }
 .overview {
-  font-size: 13px;
-  color: #555;
-  line-height: 1.4;
-  margin-bottom: 20px;
-  flex-grow: 1;
+  font-size: 0.9rem;
+  color: #666;
 }
-.fav-btn {
-  width: 100%;
-  padding: 12px;
-  cursor: pointer;
-  border: none;
-  border-radius: 8px;
-  background: #ecf0f1;
-  color: #333;
-  font-weight: bold;
-  font-size: 14px;
-  transition: 0.3s;
-  margin-top: auto;
+.loading,
+.error {
+  text-align: center;
+  padding: 50px;
+  font-size: 1.2rem;
 }
-.fav-btn.active {
-  background: #ff4757;
-  color: white;
+.error {
+  color: red;
 }
 </style>

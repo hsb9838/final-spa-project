@@ -1,21 +1,34 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
-import MoviesView from "../views/MoviesView.vue";
+import MovieDetailView from "../views/MovieDetailView.vue";
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes: [
     {
-      path: "/", // 기본 주소
+      path: "/",
       name: "home",
       component: HomeView,
     },
     {
-      path: "/movies", // 영화 목록 주소
+      path: "/movies",
       name: "movies",
-      component: MoviesView,
+      component: () => import("../views/MoviesView.vue"),
+    },
+    {
+      path: "/movies/:id",
+      name: "movie-detail",
+      component: MovieDetailView,
     },
   ],
+  // 🌟 [추가됨] 뒤로가기 시 스크롤 위치를 기억하는 마법의 코드
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition; // 저장된 위치가 있으면 거기로 이동
+    } else {
+      return { top: 0 }; // 새 페이지면 맨 위로
+    }
+  },
 });
 
 export default router;
