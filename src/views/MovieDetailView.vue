@@ -72,6 +72,20 @@
               }}
             </p>
           </div>
+          <hr class="divider" />
+          <div class="ai-section">
+            <button
+              @click="generateAIReview"
+              class="ai-btn"
+              :disabled="isAiLoading"
+            >
+              {{ isAiLoading ? "생성 중..." : "AI 맞춤 추천사 듣기" }}
+            </button>
+
+            <div v-if="aiReview" class="ai-result-box">
+              <p>{{ aiReview }}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -95,9 +109,10 @@
 </template>
 
 <script setup>
-import { onMounted, computed, watch } from "vue";
+import { onMounted, computed, watch, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useMovieStore } from "../stores/movieStore";
+import axios from "axios";
 
 const route = useRoute();
 const router = useRouter();
@@ -134,6 +149,44 @@ watch(
 
 const goBack = () => {
   router.back();
+};
+
+const aiReview = ref();
+const isAiLoading = ref(false);
+
+const generateAIReview = async () => {
+  if (!store.selectedMovie) return;
+
+  isAiLoading.value = true;
+  aiReview.value = "";
+
+  try {
+    const promptMessage = `너는 영화 평론 유튜버야. 아래 영화 데이터를 기반으로 블로그 글처럼 2~3문단 분량의 상세하고 흡입력 있는 추천평을 작성해줘(이모지 필수).
+제목: "${store.selectedMovie.title}",
+장르: ${store.selectedMovie.genres.map((g) => g.name).join(",")},
+평점: ${store.selectedMovie.vote_average.toFixed(1)}점`;
+
+    const response = await axios.post(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        model: "llama-3.1-8b-instant",
+        messages: [{ role: "user", content: promptMessage }],
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_AI_API_KEY}`,
+        },
+      },
+    );
+
+    aiReview.value = response.data.choices[0].message.content;
+  } catch (error) {
+    console.error("AI 호출 에러:", error);
+    aiReview.value = "서버가 혼잡합니다. 잠시 후 다시 시도해 주세요.";
+  } finally {
+    isAiLoading.value = false;
+  }
 };
 </script>
 
@@ -391,5 +444,49 @@ const goBack = () => {
     text-align: center;
     border-left: none;
   }
+}
+.divider {
+  border: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 30px 0;
+}
+
+.ai-section {
+  margin: 30px 0;
+  padding: 20px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.ai-btn {
+  background: linear-gradient(45deg, #8a2be2, #4b0082);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.ai-btn:hover {
+  background: linear-gradient(45deg, #9b4de0, #5c009e);
+}
+
+.ai-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+.ai-result-box {
+  margin-top: 15px;
+  padding: 15px;
+  background: #222;
+  border-left: 4px solid #8a2be2;
+  color: #fff;
+  line-height: 1.6;
 }
 </style>

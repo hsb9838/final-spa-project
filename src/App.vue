@@ -5,24 +5,19 @@ import { useMovieStore } from "./stores/movieStore";
 
 const store = useMovieStore();
 
-// [반응형 연산 1] 세션 스토리지 기반 실시간 찜 개수를 계산합니다.
 const totalFavoritesCount = computed(() => {
   return store.favorites.length;
 });
 
-// [반응형 연산 2] TMDB vote_average 스펙에 맞춘 평균 평점 실시간 집계 로직입니다.
 const averageFavoritesRating = computed(() => {
-  // 🚨 방어 코드: 찜 목록이 완전히 비어있을 때 0으로 나누어 발생하는 NaN 에러를 방지합니다.
   if (store.favorites.length === 0) {
     return "0.0";
   }
 
-  // .reduce()를 활용하여 사용자가 찜한 영화들의 실제 평점 총합을 누적합니다.
   const totalRatingSum = store.favorites.reduce((accumulator, movie) => {
     return accumulator + movie.vote_average;
   }, 0);
 
-  // 평점 총합을 총 개수로 나누고 소수점 첫째 자리까지 포맷팅합니다.
   const calculatedAverage = totalRatingSum / store.favorites.length;
   return calculatedAverage.toFixed(1);
 });

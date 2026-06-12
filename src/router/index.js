@@ -21,12 +21,12 @@ const router = createRouter({
       component: MovieDetailView,
     },
   ],
-  // 🌟 [추가됨] 뒤로가기 시 스크롤 위치를 기억하는 마법의 코드
+
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
-      return savedPosition; // 저장된 위치가 있으면 거기로 이동
+      return savedPosition;
     } else {
-      return { top: 0 }; // 새 페이지면 맨 위로
+      return { top: 0 };
     }
   },
 });
