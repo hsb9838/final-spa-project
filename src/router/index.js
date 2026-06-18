@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import MovieDetailView from "../views/MovieDetailView.vue";
+import NotFoundView from "../views/NotFoundView.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -20,6 +21,9 @@ const router = createRouter({
       name: "movie-detail",
       component: MovieDetailView,
     },
+    { path: "/movies/:id", name: "movie-detail", component: MovieDetailView },
+
+    { path: "/:pathMatch(.*)*", name: "not-found", component: NotFoundView },
   ],
 
   scrollBehavior(to, from, savedPosition) {
