@@ -21,8 +21,16 @@ const router = createRouter({
       name: "movie-detail",
       component: MovieDetailView,
     },
-    { path: "/movies/:id", name: "movie-detail", component: MovieDetailView },
-
+    {
+      path: "/search",
+      name: "search",
+      component: () => import("../views/SearchView.vue"),
+    },
+    {
+      path: "/favorites",
+      name: "favorites",
+      component: () => import("../views/FavoritesView.vue"),
+    },
     { path: "/:pathMatch(.*)*", name: "not-found", component: NotFoundView },
   ],
 

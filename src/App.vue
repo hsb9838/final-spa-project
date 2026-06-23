@@ -1,9 +1,11 @@
 <script setup>
-import { computed } from "vue";
-import { RouterLink, RouterView } from "vue-router";
+import { computed, ref } from "vue";
+import { RouterLink, RouterView, useRouter } from "vue-router";
 import { useMovieStore } from "./stores/movieStore";
 
 const store = useMovieStore();
+const router = useRouter();
+const searchInput = ref("");
 
 const totalFavoritesCount = computed(() => {
   return store.favorites.length;
@@ -21,6 +23,12 @@ const averageFavoritesRating = computed(() => {
   const calculatedAverage = totalRatingSum / store.favorites.length;
   return calculatedAverage.toFixed(1);
 });
+
+const handleSearch = () => {
+  const keyword = searchInput.value.trim();
+  if (!keyword) return;
+  router.push({ name: "search", query: { q: keyword } });
+};
 </script>
 
 <template>
@@ -35,7 +43,18 @@ const averageFavoritesRating = computed(() => {
         <nav class="nav-menu">
           <RouterLink to="/" class="nav-item">홈</RouterLink>
           <RouterLink to="/movies" class="nav-item">영화 목록</RouterLink>
+          <RouterLink to="/favorites" class="nav-item">찜 목록</RouterLink>
         </nav>
+
+        <form class="search-form" @submit.prevent="handleSearch">
+          <input
+            v-model="searchInput"
+            type="text"
+            placeholder="영화 제목 검색..."
+            class="search-input"
+          />
+          <button type="submit" class="search-btn">검색</button>
+        </form>
 
         <div class="header-dashboard">
           <div class="dashboard-badge favorite-count">
@@ -76,10 +95,13 @@ const averageFavoritesRating = computed(() => {
 .header-content {
   max-width: 1200px;
   margin: 0 auto;
-  height: 80px;
+  min-height: 80px;
+  padding: 12px 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .logo-zone {
   display: flex;
@@ -119,6 +141,32 @@ const averageFavoritesRating = computed(() => {
 .router-link-active.nav-item {
   color: #ff4757;
   background-color: rgba(255, 87, 87, 0.1);
+}
+.search-form {
+  display: flex;
+  gap: 6px;
+}
+.search-input {
+  padding: 8px 12px;
+  border: 1px solid #3f4656;
+  border-radius: 6px;
+  background: #2f3542;
+  color: #fff;
+  font-size: 14px;
+  width: 160px;
+}
+.search-input::placeholder {
+  color: #a4b0be;
+}
+.search-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #ff4757;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 14px;
 }
 .header-dashboard {
   display: flex;

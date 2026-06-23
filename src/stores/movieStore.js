@@ -4,7 +4,9 @@ import axios from "axios";
 
 export const useMovieStore = defineStore("movie", () => {
   const movies = ref([]);
-  const favorites = ref([]);
+  const savedFavorites =
+    JSON.parse(localStorage.getItem("favorite_movies")) || [];
+  const favorites = ref(savedFavorites);
   const isLoading = ref(false);
   const errorMessage = ref("");
 
@@ -31,6 +33,10 @@ export const useMovieStore = defineStore("movie", () => {
     }
   };
 
+  const isFavorite = (movieId) => {
+    return favorites.value.some((m) => m.id === movieId);
+  };
+
   const toggleFavorite = (movie) => {
     const index = favorites.value.findIndex((m) => m.id === movie.id);
     if (index === -1) {
@@ -38,6 +44,7 @@ export const useMovieStore = defineStore("movie", () => {
     } else {
       favorites.value.splice(index, 1);
     }
+    localStorage.setItem("favorite_movies", JSON.stringify(favorites.value));
   };
 
   const fetchMovieDetail = async (movieId) => {
@@ -74,6 +81,7 @@ export const useMovieStore = defineStore("movie", () => {
     isLoading,
     errorMessage,
     fetchMovies,
+    isFavorite,
     toggleFavorite,
     selectedMovie,
     fetchMovieDetail,

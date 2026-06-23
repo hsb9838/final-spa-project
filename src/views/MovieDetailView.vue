@@ -25,7 +25,17 @@
         </div>
 
         <div class="info-zone">
-          <h1 class="movie-main-title">{{ store.selectedMovie?.title }}</h1>
+          <div class="title-row">
+            <h1 class="movie-main-title">{{ store.selectedMovie?.title }}</h1>
+            <button
+              v-if="store.selectedMovie"
+              class="detail-favorite-btn"
+              :class="{ active: store.isFavorite(store.selectedMovie.id) }"
+              @click="store.toggleFavorite(store.selectedMovie)"
+            >
+              {{ store.isFavorite(store.selectedMovie.id) ? "❤️ 찜됨" : "🤍 찜하기" }}
+            </button>
+          </div>
           <p class="tagline" v-if="store.selectedMovie?.tagline">
             "{{ store.selectedMovie.tagline }}"
           </p>
@@ -281,6 +291,28 @@ const generateAIReview = async () => {
   letter-spacing: -1.5px;
   margin: 10px 0;
   line-height: 1.2;
+}
+.title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.detail-favorite-btn {
+  padding: 10px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.detail-favorite-btn.active {
+  background: rgba(255, 71, 87, 0.3);
+  border-color: #ff4757;
 }
 .tagline {
   font-size: 24px;
